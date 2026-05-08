@@ -7,6 +7,11 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 💡 新增这行：如果是图片/数据代理接口，直接放行，不进行身份验证
+  if (pathname.startsWith('/api/proxy')) {
+    return NextResponse.next();
+  }
+  
   // 跳过不需要认证的路径
   if (shouldSkipAuth(pathname)) {
     return NextResponse.next();
