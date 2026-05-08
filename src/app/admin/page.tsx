@@ -44,7 +44,7 @@ import { createPortal } from 'react-dom';
 import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
-import DataMigration from '@/components/DataMigration';
+//import DataMigration from '@/components/DataMigration';
 import PageLayout from '@/components/PageLayout';
 
 // 统一按钮样式系统
