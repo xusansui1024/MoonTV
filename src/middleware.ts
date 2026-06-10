@@ -11,8 +11,8 @@ export async function middleware(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || request.ip || '未知 IP';
   console.log(`[实时监控] 路径: ${pathname} | 访客 IP: ${ip}`);
   
-  // 💡 新增这行：如果是图片/数据代理接口，直接放行，不进行身份验证
-  if (pathname.startsWith('/api/proxy')) {
+  // 💡 新增/修改：把 proxy 和 douban 相关的接口全部加入白名单
+  if (pathname.startsWith('/api/proxy') || pathname.startsWith('/api/douban')) {
     return NextResponse.next();
   }
   
