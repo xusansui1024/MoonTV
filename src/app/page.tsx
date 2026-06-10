@@ -2,6 +2,7 @@
 
 'use client';
 
+import Announcement from '@/components/Announcement';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
@@ -156,6 +157,7 @@ function HomeClient() {
 
   return (
     <PageLayout>
+      <Announcement />
       <div className='px-2 sm:px-10 py-4 sm:py-8 overflow-visible'>
         {/* 顶部 Tab 切换 */}
         <div className='mb-8 flex justify-center'>
