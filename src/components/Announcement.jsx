@@ -48,8 +48,8 @@ export default function Announcement() {
           borderBottomRightRadius: '8px',
           marginBottom: '24px'
         }}>
-          <p style={{ margin: 0, color: '#4b5563', fontSize: '15px', lineHeight: '1.6' }}>
-            只要影片封面没有正常加载，直接点击右上角用户头像 - 设置，并点击“重置”!!!!!!
+          <p style={{ margin: 0, color: '#4b5563', fontSize: '18px', lineHeight: '1.6' }}>
+            ✨✨发现任何问题,请随时联系小徐✨✨
           </p>
         </div>
 
