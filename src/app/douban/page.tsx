@@ -106,7 +106,7 @@ function DoubanPageClient() {
       // 逻辑清晰：泰剧优先，其次 Custom，最后默认
       if (secondarySelection === 'tv_Thailand') {
         data = await getDoubanList({
-          tag: '泰剧',
+          tag: '泰国',
           type: 'tv',
           pageLimit: 25,
           pageStart: 0,
@@ -162,11 +162,10 @@ function DoubanPageClient() {
           // 逻辑清晰：泰剧优先，其次 Custom，最后默认
           if (secondarySelection === 'tv_Thailand') {
             data = await getDoubanList({
-              tag: '泰剧',
+              tag: '泰国',
               type: 'tv',
               pageLimit: 25,
               pageStart: currentPage * 25,
-            });
           } else if (custom) {
             data = await getDoubanList({
               tag,
