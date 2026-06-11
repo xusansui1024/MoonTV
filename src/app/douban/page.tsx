@@ -76,8 +76,7 @@ function DoubanPageClient() {
       let list: DoubanItem[] = [];
 
       if (secondarySelection === 'tv_Thailand') {
-        // 1. 扩充关键词，植入热门剧名作为搜索种子，提升召回权重
-        const keywords = ['泰剧', '泰国', 'Thai', '禁忌女孩', '泰剧 2026', '泰剧 2025'];
+        const keywords = ['泰剧', '泰国', 'Thai', '禁忌女孩', '天生一对', '深宅绅士'];
         const pg = Math.floor(pageStart / 25) + 1;
         
         const results = await Promise.all(
@@ -88,15 +87,18 @@ function DoubanPageClient() {
         
         const blacklist = ['AFC', '锦标赛', '足球', '比赛', '亚足联', '预选赛', '世界杯', 'Logo', '积分榜', '女足', 'NBA', '亚洲杯', '泰国性痴迷', '亚运会', '男足', '回放', '世预赛', '世预亚','狂野泰国','冲游泰国','到了30岁还是处男','男足', '亚残运会', '泰国大象医院', '冲遊泰国', '野性泰国','T台新面孔', '泰国72小时粤语', '觉醒眼神后', '幸存者', '空中看泰国', '南洋大宝荐'];
         
-        const uniqueMap = new Map<string, DoubanItem>();
+        // 临时 Map 用于处理本次抓取的数据
+        const newItemsMap = new Map<string, DoubanItem>();
         
         allResults.forEach((item: any) => {
             const title = item.title || item.name || '';
+            const id = item.id || title; // 优先使用ID作为唯一标识
             const isNoise = blacklist.some(kw => title.includes(kw));
             
             if (!isNoise && title.length > 0) {
-                if (!uniqueMap.has(title)) {
-                    uniqueMap.set(title, {
+                // 使用 ID 去重
+                if (!newItemsMap.has(id)) {
+                    newItemsMap.set(id, {
                         id: item.id || '',
                         title: title,
                         poster: item.poster || item.cover || item.pic || '',
@@ -107,16 +109,11 @@ function DoubanPageClient() {
             }
         });
         
-        list = Array.from(uniqueMap.values());
+        list = Array.from(newItemsMap.values());
 
-        // 2. 治本：前端强制年份重排序 (降序：年份大的排前面)
-        list.sort((a, b) => {
-            const yearA = parseInt(a.year || '0');
-            const yearB = parseInt(b.year || '0');
-            return yearB - yearA; 
-        });
-
-        setHasMore(list.length >= 25);
+        // 前端年份降序排序
+        list.sort((a, b) => parseInt(b.year || '0') - parseInt(a.year || '0'));
+        setHasMore(list.length > 0);
       } 
       else if (custom) {
         const data = await getDoubanList({ tag, type, pageLimit: 25, pageStart });
@@ -128,7 +125,15 @@ function DoubanPageClient() {
         setHasMore(list.length === 25);
       }
 
-      setDoubanData(prev => isMore ? [...prev, ...list] : list);
+      // 【双重去重】：不仅在本次抓取中去重，更新状态时再次使用 ID 过滤
+      setDoubanData(prev => {
+          const combined = isMore ? [...prev, ...list] : list;
+          // 利用 Map 的特性，以 ID 为 Key 再次去重
+          const uniqueCombined = new Map();
+          combined.forEach(item => uniqueCombined.set(item.id || item.title, item));
+          return Array.from(uniqueCombined.values());
+      });
+      
     } catch (err) {
       console.error("加载数据出错:", err);
       setHasMore(false);
