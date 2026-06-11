@@ -166,6 +166,7 @@ function DoubanPageClient() {
               type: 'tv',
               pageLimit: 25,
               pageStart: currentPage * 25,
+            });
           } else if (custom) {
             data = await getDoubanList({
               tag,
