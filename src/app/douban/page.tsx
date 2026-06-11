@@ -21,7 +21,6 @@ function DoubanPageClient() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectorsReady, setSelectorsReady] = useState(false);
   
-  const observerRef = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -38,7 +37,6 @@ function DoubanPageClient() {
     return '全部';
   });
 
-  // 1. 初始化与类型切换逻辑
   useEffect(() => {
     setSelectorsReady(false);
     setLoading(true);
@@ -61,8 +59,6 @@ function DoubanPageClient() {
     return () => clearTimeout(timer);
   }, [type, tag, custom]);
 
-  const skeletonData = Array.from({ length: 25 }, (_, index) => index);
-
   const getRequestParams = useCallback((pageStart: number) => ({
     kind: (type === 'tv' || type === 'show') ? ('tv' as const) : (type as 'tv' | 'movie'),
     category: (type === 'tv' || type === 'show') ? type : primarySelection,
@@ -71,53 +67,58 @@ function DoubanPageClient() {
     pageStart,
   }), [type, primarySelection, secondarySelection]);
 
-  // 2. 数据获取核心函数
+  // 核心：智能数据获取函数
   const fetchData = useCallback(async (pageStart: number, isMore: boolean) => {
     try {
       if (isMore) setIsLoadingMore(true);
       else setLoading(true);
 
-      let data: DoubanResult;
+      let list: DoubanItem[] = [];
 
+      // 自动逻辑：泰剧使用搜索 API，其他走原逻辑
       if (secondarySelection === 'tv_Thailand') {
-        data = await getDoubanList({ tag: '泰国', type: 'tv', pageLimit: 25, pageStart });
-      } else if (custom) {
-        data = await getDoubanList({ tag, type, pageLimit: 25, pageStart });
+        const res = await fetch(`/api/search?q=${encodeURIComponent('泰国电视剧')}`);
+        const json = await res.json();
+        list = (json.results || []).map((item: any) => ({
+            id: item.id || '',
+            title: item.title || item.name || '未知标题',
+            poster: item.poster || item.cover || item.pic || '',
+            rate: item.rate || '0.0',
+            year: item.year || ''
+        }));
+      } 
+      else if (custom) {
+        const data = await getDoubanList({ tag, type, pageLimit: 25, pageStart });
+        if (data.code === 200) list = data.list;
       } else {
-        data = await getDoubanCategories(getRequestParams(pageStart));
+        const data = await getDoubanCategories(getRequestParams(pageStart));
+        if (data.code === 200) list = data.list;
       }
 
-      if (data.code === 200) {
-        setDoubanData(prev => isMore ? [...prev, ...data.list] : data.list);
-        setHasMore(data.list.length === 25);
-      }
+      setDoubanData(prev => isMore ? [...prev, ...list] : list);
+      setHasMore(list.length >= 16);
     } catch (err) {
-      console.error(err);
+      console.error("加载数据出错:", err);
     } finally {
       if (isMore) setIsLoadingMore(false);
       else setLoading(false);
     }
   }, [type, tag, custom, secondarySelection, getRequestParams]);
 
-  // 3. 监听初始加载
   useEffect(() => {
     if (!selectorsReady && !custom) return;
-    
     if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
     debounceTimeoutRef.current = setTimeout(() => {
       setCurrentPage(0);
       fetchData(0, false);
     }, 100);
-
     return () => { if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current); };
   }, [selectorsReady, type, tag, custom, primarySelection, secondarySelection, fetchData]);
 
-  // 4. 监听分页加载
   useEffect(() => {
     if (currentPage > 0) fetchData(currentPage * 25, true);
   }, [currentPage]);
 
-  // 5. 滚动监听
   useEffect(() => {
     if (!hasMore || isLoadingMore || loading || !loadingRef.current) return;
     const observer = new IntersectionObserver(([entry]) => {
@@ -146,8 +147,7 @@ function DoubanPageClient() {
         </div>
         
         <div className='grid grid-cols-3 gap-x-2 gap-y-12 sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] sm:gap-x-8 sm:gap-y-20'>
-          {(loading || (!selectorsReady && !custom))
-            ? skeletonData.map((i) => <DoubanCardSkeleton key={i} />)
+          {(loading) ? Array.from({ length: 10 }, (_, i) => <DoubanCardSkeleton key={i} />)
             : doubanData.map((item, i) => (
                 <VideoCard key={`${item.id}-${i}`} from='douban' title={item.title} poster={item.poster} douban_id={item.id} rate={item.rate} year={item.year} type={type === 'movie' ? 'movie' : ''} />
               ))
