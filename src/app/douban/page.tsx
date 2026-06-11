@@ -12,14 +12,11 @@ import DoubanSelector from '@/components/DoubanSelector';
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
 
-// 【新增】：标题标准化函数，去除括号、后缀等干扰
-const normalizeTitle = (title: string) => {
+// 【优化】：仅清理“垃圾”后缀，保留“版本”标识
+const cleanTitle = (title: string) => {
   return title
-    .replace(/[\(\（].*?[\)\）]/g, '') // 去除括号内容
-    .replace(/[\[\【].*?[\]\】]/g, '') // 去除中括号内容
-    .replace(/[:：-].*$/, '')          // 去除冒号/连字符后的内容
-    .trim()
-    .toLowerCase();
+    .replace(/[\[\【](电影解说|预告片|分析|剪辑)[\]\】]/g, '') // 只清理明显的非正片
+    .trim();
 };
 
 function DoubanPageClient() {
@@ -96,19 +93,19 @@ function DoubanPageClient() {
         
         const blacklist = ['AFC', '锦标赛', '足球', '比赛', '亚足联', '预选赛', '世界杯', 'Logo', '积分榜', '女足', 'NBA', '亚洲杯', '泰国性痴迷', '亚运会', '男足', '回放', '世预赛', '世预亚','狂野泰国','冲游泰国','到了30岁还是处男','男足', '亚残运会', '泰国大象医院', '冲遊泰国', '野性泰国','T台新面孔', '泰国72小时粤语', '觉醒眼神后', '幸存者', '空中看泰国', '南洋大宝荐'];
         
+        // 核心：使用 Map 存储，Key 优先用 ID
         const newItemsMap = new Map<string, DoubanItem>();
         
         allResults.forEach((item: any) => {
             const rawTitle = item.title || item.name || '';
-            const normalized = normalizeTitle(rawTitle); // 使用归一化后的标题去重
+            const id = item.id || rawTitle; // 优先 ID，ID 相同才判定为重复
             const isNoise = blacklist.some(kw => rawTitle.includes(kw));
             
-            if (!isNoise && normalized.length > 0) {
-                // 只有在归一化标题不存在时才添加
-                if (!newItemsMap.has(normalized)) {
-                    newItemsMap.set(normalized, {
+            if (!isNoise && rawTitle.length > 0) {
+                if (!newItemsMap.has(id)) {
+                    newItemsMap.set(id, {
                         id: item.id || '',
-                        title: rawTitle, // 界面显示原始标题
+                        title: cleanTitle(rawTitle), // 显示清理后的标题，但 ID 没变
                         poster: item.poster || item.cover || item.pic || '',
                         rate: item.rate || '0.0',
                         year: item.year || '0'
@@ -133,9 +130,9 @@ function DoubanPageClient() {
 
       setDoubanData(prev => {
           const combined = isMore ? [...prev, ...list] : list;
-          // 全局去重（防止不同页之间重复）
+          // 全局去重：利用 Map 的唯一 ID 特性
           const finalMap = new Map();
-          combined.forEach(item => finalMap.set(normalizeTitle(item.title), item));
+          combined.forEach(item => finalMap.set(item.id || item.title, item));
           return Array.from(finalMap.values());
       });
       
