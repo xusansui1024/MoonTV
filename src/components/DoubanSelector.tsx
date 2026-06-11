@@ -60,6 +60,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
   const tvOptions: SelectorOption[] = [
     { label: '全部', value: 'tv' },
     { label: '国产', value: 'tv_domestic' },
+    { label: '泰国', value: 'tv_Thailand' },
     { label: '欧美', value: 'tv_american' },
     { label: '日本', value: 'tv_japanese' },
     { label: '韩国', value: 'tv_korean' },
