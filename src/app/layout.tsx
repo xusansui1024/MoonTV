@@ -42,7 +42,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let siteName = process.env.SITE_NAME || 'MoonTV';
+  let siteName = process.env.SITE_NAME || '蜡笔小徐';
   let announcement =
     process.env.ANNOUNCEMENT ||
     '';
