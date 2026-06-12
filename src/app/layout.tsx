@@ -9,8 +9,8 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import { getConfig } from '@/lib/config';
 import RuntimeConfig from '@/lib/runtime';
 
-import { SiteProvider } from '../components/SiteProvider';
-import { ThemeProvider } from '../components/ThemeProvider';
+import { SiteProvider } from '@/components/SiteProvider';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const config = await getConfig();
     siteName = config.SiteConfig.SiteName;
   }
-  
+
   // --- 强制覆盖逻辑 ---
   siteName = '蜡笔小徐';
 
@@ -78,6 +78,7 @@ export default async function RootLayout({
 
   // --- 强制覆盖逻辑 ---
   siteName = '蜡笔小徐';
+  announcement = '✨发现任何问题,请随时联系小徐✨'; // <--- 在这里输入你想说的文字
 
   // 将运行时配置注入到全局 window 对象
   const runtimeConfig = {
